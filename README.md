@@ -1,3 +1,5 @@
+<img width="1122" height="785" alt="Demo Image1" src="https://github.com/user-attachments/assets/4521183d-bd64-4032-86cc-0d40001ce219" />
+
 # InterviewAI
 
 InterviewAI is a full-stack web application that helps users prepare for interviews by turning a job description and resume into a personalized interview strategy. It uses AI to analyze candidate-job fit, generate likely interview questions, identify skill gaps, build a preparation roadmap, and create a tailored resume PDF.

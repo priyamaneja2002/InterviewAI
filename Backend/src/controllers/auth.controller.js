@@ -2,13 +2,29 @@ const userModel = require('../models/user.model');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const tokenBlacklistModel = require('../models/blacklist.model');
+const { OAuth2Client } = require('google-auth-library');
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+function signAuthToken(userId) {
+    return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '1d' });
+}
+
+function setAuthCookie(res, token) {
+    res.cookie('token', token, {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 24 * 60 * 60 * 1000,
+    });
+}
 /**
  * @name registerUserController
  * @description Register a new user, expects username, email and password in the request body
  * @access Public
  */
 async function registerUserController(req, res) {
-    const { username, email, password } = req.body;
+    const { username, email, password, firstName, lastName } = req.body;
 
     if (!username || !email || !password) {
         return res.status(400).json({ message: 'All fields are required' });
@@ -22,13 +38,28 @@ async function registerUserController(req, res) {
 
     const hash = await bcrypt.hash(password, 10);
 
-    const user = await userModel.create({ username, email, password: hash });
+    const user = await userModel.create({
+        username,
+        email,
+        password: hash,
+        firstName,
+        lastName,
+        authProvider: 'local',
+    });
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    const token = signAuthToken(user._id);
+    setAuthCookie(res, token);
 
-    res.cookie("token", token);
-
-    res.status(201).json({ message: 'User created successfully', user: { userId: user._id, username, email } });
+    res.status(201).json({
+        message: 'User created successfully',
+        user: {
+            userId: user._id,
+            username: user.username,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+        },
+    });
 }
 
 /**
@@ -41,7 +72,7 @@ async function loginUserController(req, res) {
     
     const user = await userModel.findOne({ email });
 
-    if (!user) {
+    if (!user || !user.password) {
         return res.status(400).json({ message: 'Invalid email or password' });
     }
 
@@ -50,11 +81,137 @@ async function loginUserController(req, res) {
     if (!isPasswordCorrect) {
         return res.status(400).json({ message: 'Invalid email or password' });
     }
-    
-    const token  = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
 
-    res.cookie("token", token);
-    res.status(200).json({ message: 'User logged in successfully', user: { userId: user._id, username: user.username, email: user.email } });
+    const token = signAuthToken(user._id);
+    setAuthCookie(res, token);
+
+    res.status(200).json({
+        message: 'User logged in successfully',
+        user: {
+            userId: user._id,
+            username: user.username,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            avatar: user.avatar,
+            createdAt: user.createdAt,
+        },
+    });
+}
+
+/**
+ * @name googleAuthController
+ * @description Authenticate (login or register) a user via a Google ID token.
+ *              Expects { credential } in the body containing the JWT credential
+ *              returned by Google Identity Services on the client.
+ * @access Public
+ */
+async function googleAuthController(req, res) {
+    const { credential } = req.body;
+
+    if (!credential) {
+        return res.status(400).json({ message: 'Google credential is required' });
+    }
+
+    if (!process.env.GOOGLE_CLIENT_ID) {
+        return res.status(500).json({ message: 'Google sign-in is not configured on the server' });
+    }
+
+    let payload;
+    try {
+        const ticket = await googleClient.verifyIdToken({
+            idToken: credential,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
+        payload = ticket.getPayload();
+    } catch (error) {
+        console.log('Google token verification failed:', error?.message || error);
+        return res.status(401).json({ message: 'Invalid Google credential' });
+    }
+
+    const {
+        sub: googleId,
+        email,
+        name,
+        given_name: givenName,
+        family_name: familyName,
+        picture,
+        email_verified,
+    } = payload || {};
+
+    if (!email || !email_verified) {
+        return res.status(401).json({ message: 'Google account email is not verified' });
+    }
+
+    // Derive a display first/last name from whatever Google returned.
+    const fallbackFirst = (name || '').trim().split(/\s+/)[0] || '';
+    const fallbackLast = (name || '').trim().split(/\s+/).slice(1).join(' ') || '';
+    const firstName = givenName || fallbackFirst || '';
+    const lastName = familyName || fallbackLast || '';
+
+    // Find existing user by googleId or by email so we can link accounts.
+    let user = await userModel.findOne({ $or: [{ googleId }, { email }] });
+
+    if (!user) {
+        // Build a unique, sanitized username from the Google profile.
+        const baseUsername = (name || email.split('@')[0])
+            .toString()
+            .toLowerCase()
+            .replace(/[^a-z0-9_]/g, '')
+            .slice(0, 20) || 'user';
+
+        let username = baseUsername;
+        let suffix = 0;
+        while (await userModel.findOne({ username })) {
+            suffix += 1;
+            username = `${baseUsername}${suffix}`;
+        }
+
+        user = await userModel.create({
+            username,
+            email,
+            googleId,
+            firstName,
+            lastName,
+            avatar: picture,
+            authProvider: 'google',
+        });
+    } else {
+        let updated = false;
+        if (!user.googleId) {
+            user.googleId = googleId;
+            updated = true;
+        }
+        if (!user.avatar && picture) {
+            user.avatar = picture;
+            updated = true;
+        }
+        if (!user.firstName && firstName) {
+            user.firstName = firstName;
+            updated = true;
+        }
+        if (!user.lastName && lastName) {
+            user.lastName = lastName;
+            updated = true;
+        }
+        if (updated) await user.save();
+    }
+
+    const token = signAuthToken(user._id);
+    setAuthCookie(res, token);
+
+    res.status(200).json({
+        message: 'Logged in with Google',
+        user: {
+            userId: user._id,
+            username: user.username,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            avatar: user.avatar,
+            createdAt: user.createdAt,
+        },
+    });
 }
 
 
@@ -73,7 +230,11 @@ async function logoutUserController(req, res) {
     if (token) {
         await tokenBlacklistModel.create({ token });
     }
-    res.clearCookie("token");
+    res.clearCookie('token', {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+    });
     res.status(200).json({ message: 'User logged out successfully' });
 }
 
@@ -96,6 +257,10 @@ async function getMeController(req, res) {
             userId: user._id,
             username: user.username,
             email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            avatar: user.avatar,
+            createdAt: user.createdAt,
         }
     })
 }
@@ -106,4 +271,5 @@ module.exports = {
     loginUserController,
     logoutUserController,
     getMeController,
+    googleAuthController,
 };

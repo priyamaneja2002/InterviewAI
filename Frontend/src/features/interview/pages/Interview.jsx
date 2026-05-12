@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import '../style/Interview.scss'
 import { useInterview } from '../hooks/useInterview.js'
-import { useNavigate, useParams } from 'react-router'
+import { useParams } from 'react-router'
+import AIThinking from '../../../components/loading/AIThinking'
 
 
 
@@ -72,9 +73,17 @@ const Interview = () => {
 
     if (loading || !report) {
         return (
-            <main className='loading-screen'>
-                <h1>Loading your interview plan...</h1>
-            </main>
+            <AIThinking
+                inline
+                title='Loading your interview plan'
+                subtitle='Fetching your tailored questions, skill gaps and roadmap.'
+                stages={[
+                    'Fetching your interview plan...',
+                    'Loading questions...',
+                    'Loading skill gaps...',
+                    'Loading roadmap...',
+                ]}
+            />
         )
     }
 
@@ -86,13 +95,16 @@ const Interview = () => {
     return (
         <div className='interview-page'>
             {resumePdfLoading && (
-                <div className='resume-loading-overlay'>
-                    <div className='resume-loading-overlay__card'>
-                        <div className='resume-loading-overlay__spinner' />
-                        <h2>Building your tailored resume...</h2>
-                        <p>This can take up to a minute. Please don't close this tab.</p>
-                    </div>
-                </div>
+                <AIThinking
+                    title='Building your tailored resume'
+                    subtitle="This can take up to a minute. Please don't close this tab."
+                    stages={[
+                        'Reading your interview plan...',
+                        'Tailoring resume content to the role...',
+                        'Formatting and laying out pages...',
+                        'Generating the PDF...',
+                    ]}
+                />
             )}
             <div className='interview-layout'>
 

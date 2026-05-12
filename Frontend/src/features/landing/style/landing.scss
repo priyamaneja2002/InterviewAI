@@ -1,0 +1,684 @@
+@use '../../../style/button.scss';
+
+$bg-app:       #161616;
+$bg-card:      #1a1a1a;
+$bg-elevated:  #1e1e1e;
+$border:       rgba(255, 255, 255, 0.08);
+$text:         whitesmoke;
+$text-muted:   #8a8a92;
+$accent:       #e1034d;
+$accent-soft:  rgba(225, 3, 77, 0.12);
+
+.landing-page {
+    width: 100%;
+    background-color: $bg-app;
+    color: $text;
+    display: flex;
+    flex-direction: column;
+}
+
+// Buttons specific to landing
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    font-weight: 600;
+
+    &.btn-lg {
+        padding-inline: 1.6rem;
+        padding-block: 0.9rem;
+        font-size: 0.95rem;
+    }
+
+    &.btn-ghost {
+        background-color: transparent;
+        color: $text;
+        border: 1px solid $border;
+        transition: border-color 0.2s ease, background-color 0.2s ease;
+
+        &:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            background-color: rgba(255, 255, 255, 0.04);
+        }
+    }
+}
+
+// ── Hero ─────────────────────────────────────────────────────────────────────
+.landing-hero {
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+    padding: 4.5rem 1.5rem 3.5rem;
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: 3rem;
+    align-items: center;
+    position: relative;
+
+    &::before {
+        content: '';
+        position: absolute;
+        inset: -10% -5% auto auto;
+        width: 520px;
+        height: 520px;
+        background: radial-gradient(circle, rgba(225, 3, 77, 0.18) 0%, transparent 65%);
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    &__inner,
+    &__panel {
+        position: relative;
+        z-index: 1;
+    }
+
+    &__eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.3rem 0.7rem;
+        border-radius: 999px;
+        background-color: $accent-soft;
+        color: #ff5a8d;
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        margin-bottom: 1.25rem;
+    }
+
+    &__title {
+        font-size: clamp(2.1rem, 4vw, 3.4rem);
+        font-weight: 800;
+        line-height: 1.08;
+        letter-spacing: -0.02em;
+        margin: 0 0 1.25rem;
+
+        .highlight {
+            color: $accent;
+        }
+    }
+
+    &__subtitle {
+        color: $text-muted;
+        font-size: 1.02rem;
+        line-height: 1.65;
+        max-width: 540px;
+        margin: 0 0 1.75rem;
+    }
+
+    &__cta {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.75rem;
+    }
+
+    &__pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+
+        li {
+            font-size: 0.78rem;
+            color: $text-muted;
+            border: 1px solid $border;
+            border-radius: 999px;
+            padding: 0.3rem 0.7rem;
+        }
+    }
+
+    // Decorative preview panel
+    &__panel {
+        background-color: $bg-card;
+        border: 1px solid $border;
+        border-radius: 1rem;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+    }
+
+    &__panel-header {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid $border;
+        background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    &__dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: rgba(255, 255, 255, 0.18);
+
+        &:nth-child(1) { background-color: #ff5f56; }
+        &:nth-child(2) { background-color: #ffbd2e; }
+        &:nth-child(3) { background-color: #27c93f; }
+    }
+
+    &__panel-title {
+        margin-left: 0.6rem;
+        font-size: 0.78rem;
+        color: $text-muted;
+    }
+
+    &__panel-body {
+        padding: 1.4rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    &__stat {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+
+        &-label {
+            font-size: 0.78rem;
+            color: $text-muted;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        &-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: $accent;
+        }
+    }
+
+    &__chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+
+        span {
+            font-size: 0.74rem;
+            padding: 0.25rem 0.55rem;
+            border-radius: 999px;
+            background-color: $accent-soft;
+            color: #ff8aae;
+            border: 1px solid rgba(225, 3, 77, 0.25);
+        }
+    }
+
+    &__line {
+        height: 1px;
+        background-color: $border;
+    }
+
+    &__rows {
+        display: flex;
+        flex-direction: column;
+        gap: 0.55rem;
+
+        div {
+            font-size: 0.82rem;
+            color: $text-muted;
+            line-height: 1.5;
+
+            strong {
+                color: $text;
+                font-weight: 600;
+                margin-right: 0.35rem;
+            }
+        }
+    }
+}
+
+// ── Section heading shared ───────────────────────────────────────────────────
+.landing-section__heading {
+    text-align: center;
+    max-width: 720px;
+    margin: 0 auto 2.5rem;
+
+    h2 {
+        font-size: clamp(1.6rem, 2.5vw, 2.2rem);
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        margin: 0.5rem 0 0.75rem;
+    }
+
+    p {
+        color: $text-muted;
+        font-size: 0.98rem;
+        line-height: 1.6;
+    }
+}
+
+.landing-section__eyebrow {
+    display: inline-block;
+    color: $accent;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+// ── Features ─────────────────────────────────────────────────────────────────
+.landing-features {
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+    padding: 3.5rem 1.5rem;
+    scroll-margin-top: 80px;
+
+    &__grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.25rem;
+    }
+}
+
+.feature-card {
+    background-color: $bg-card;
+    border: 1px solid $border;
+    border-radius: 0.9rem;
+    padding: 1.4rem;
+    transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+
+    &__icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 42px;
+        height: 42px;
+        border-radius: 0.6rem;
+        background-color: $accent-soft;
+        color: $accent;
+        margin-bottom: 0.9rem;
+    }
+
+    h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0 0 0.4rem;
+        color: $text;
+    }
+
+    p {
+        font-size: 0.88rem;
+        color: $text-muted;
+        line-height: 1.55;
+        margin: 0;
+    }
+
+    &:hover {
+        transform: translateY(-3px);
+        border-color: rgba(225, 3, 77, 0.35);
+        background-color: $bg-elevated;
+    }
+}
+
+// ── Steps ───────────────────────────────────────────────────────────────────
+.landing-steps {
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+    padding: 3.5rem 1.5rem;
+    scroll-margin-top: 80px;
+
+    &__grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.25rem;
+    }
+}
+
+.step-card {
+    background: linear-gradient(180deg, $bg-card 0%, $bg-app 100%);
+    border: 1px solid $border;
+    border-radius: 0.9rem;
+    padding: 1.6rem;
+    position: relative;
+
+    &__number {
+        display: inline-block;
+        font-size: 0.85rem;
+        font-weight: 800;
+        color: $accent;
+        background-color: $accent-soft;
+        padding: 0.25rem 0.6rem;
+        border-radius: 0.4rem;
+        letter-spacing: 0.08em;
+        margin-bottom: 0.9rem;
+    }
+
+    h3 {
+        font-size: 1.05rem;
+        font-weight: 600;
+        margin: 0 0 0.4rem;
+        color: $text;
+    }
+
+    p {
+        font-size: 0.9rem;
+        color: $text-muted;
+        line-height: 1.55;
+        margin: 0;
+    }
+}
+
+// ── Mock Interviews (Coming Soon) ───────────────────────────────────────────
+.landing-mock {
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+    padding: 3.5rem 1.5rem;
+    scroll-margin-top: 80px;
+
+    &__inner {
+        display: grid;
+        grid-template-columns: 1.05fr 0.95fr;
+        gap: 3rem;
+        align-items: center;
+        background: linear-gradient(135deg, rgba(225, 3, 77, 0.08) 0%, transparent 60%);
+        border: 1px solid $border;
+        border-radius: 1.25rem;
+        padding: 2.75rem 2.25rem;
+        position: relative;
+        overflow: hidden;
+
+        &::before {
+            content: '';
+            position: absolute;
+            top: -120px;
+            right: -120px;
+            width: 360px;
+            height: 360px;
+            background: radial-gradient(circle, rgba(225, 3, 77, 0.18) 0%, transparent 70%);
+            pointer-events: none;
+        }
+    }
+
+    &__content {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    &__eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.3rem 0.7rem;
+        border-radius: 999px;
+        background-color: $accent-soft;
+        color: $accent;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        width: max-content;
+        border: 1px solid rgba(225, 3, 77, 0.3);
+    }
+
+    &__pulse {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background-color: $accent;
+        box-shadow: 0 0 0 0 rgba(225, 3, 77, 0.55);
+        animation: landing-mock-pulse 1.5s ease-out infinite;
+    }
+
+    h2 {
+        font-size: clamp(1.6rem, 2.6vw, 2.2rem);
+        font-weight: 700;
+        margin: 0;
+        letter-spacing: -0.01em;
+
+        .highlight {
+            color: $accent;
+        }
+    }
+
+    p {
+        margin: 0;
+        color: $text-muted;
+        font-size: 0.98rem;
+        line-height: 1.65;
+        max-width: 520px;
+    }
+
+    &__features {
+        list-style: none;
+        margin: 0.5rem 0 0.25rem;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.55rem;
+
+        li {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.6rem;
+            font-size: 0.92rem;
+            color: $text;
+            line-height: 1.5;
+        }
+    }
+
+    &__check {
+        flex-shrink: 0;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background-color: $accent-soft;
+        color: $accent;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 1px;
+    }
+
+    &__cta {
+        align-self: flex-start;
+        margin-top: 0.75rem;
+    }
+
+    // ── Preview panel ───────────────────────────────────────────────────────
+    &__preview {
+        position: relative;
+        z-index: 1;
+    }
+
+    &__panel {
+        background-color: $bg-card;
+        border: 1px solid $border;
+        border-radius: 1rem;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    }
+
+    &__panel-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid $border;
+        background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    &__dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: $accent;
+
+        &--live {
+            background-color: #ff5f56;
+            box-shadow: 0 0 0 0 rgba(255, 95, 86, 0.6);
+            animation: landing-mock-blink 1.4s ease-out infinite;
+        }
+    }
+
+    &__panel-title {
+        flex: 1;
+        font-size: 0.82rem;
+        color: $text;
+        font-weight: 600;
+    }
+
+    &__panel-time {
+        font-size: 0.78rem;
+        color: $text-muted;
+        font-variant-numeric: tabular-nums;
+    }
+
+    &__panel-body {
+        padding: 1.25rem 1.25rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+    }
+
+    &__bubble {
+        font-size: 0.85rem;
+        line-height: 1.55;
+        color: $text-muted;
+        padding: 0.7rem 0.9rem;
+        border-radius: 0.7rem;
+        background-color: rgba(255, 255, 255, 0.04);
+        border: 1px solid $border;
+        max-width: 92%;
+
+        strong {
+            color: $text;
+            margin-right: 0.35rem;
+            font-weight: 600;
+        }
+
+        &--ai {
+            align-self: flex-start;
+            border-color: rgba(225, 3, 77, 0.2);
+            background-color: rgba(225, 3, 77, 0.06);
+        }
+
+        &--user {
+            align-self: flex-end;
+        }
+    }
+
+    &__bars {
+        display: flex;
+        align-items: flex-end;
+        gap: 4px;
+        height: 32px;
+        padding: 0 0.25rem;
+
+        span {
+            display: block;
+            width: 4px;
+            background-color: $accent;
+            border-radius: 2px;
+            animation: landing-mock-bars 1.2s ease-in-out infinite;
+
+            &:nth-child(1) { animation-delay: 0.0s; height: 35%; }
+            &:nth-child(2) { animation-delay: 0.1s; height: 60%; }
+            &:nth-child(3) { animation-delay: 0.2s; height: 80%; }
+            &:nth-child(4) { animation-delay: 0.3s; height: 50%; }
+            &:nth-child(5) { animation-delay: 0.4s; height: 90%; }
+            &:nth-child(6) { animation-delay: 0.5s; height: 65%; }
+            &:nth-child(7) { animation-delay: 0.6s; height: 45%; }
+            &:nth-child(8) { animation-delay: 0.7s; height: 70%; }
+        }
+    }
+
+    &__feedback {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.65rem 0.85rem;
+        border-radius: 0.6rem;
+        background-color: rgba(63, 185, 80, 0.08);
+        border: 1px solid rgba(63, 185, 80, 0.3);
+        font-size: 0.8rem;
+        color: $text-muted;
+        line-height: 1.5;
+    }
+
+    &__feedback-tag {
+        font-size: 0.68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #3fb950;
+        padding: 0.18rem 0.45rem;
+        border-radius: 0.3rem;
+        background-color: rgba(63, 185, 80, 0.15);
+        flex-shrink: 0;
+    }
+}
+
+@keyframes landing-mock-pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(225, 3, 77, 0.5); }
+    70%  { box-shadow: 0 0 0 8px rgba(225, 3, 77, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(225, 3, 77, 0); }
+}
+
+@keyframes landing-mock-blink {
+    0%   { box-shadow: 0 0 0 0 rgba(255, 95, 86, 0.6); }
+    70%  { box-shadow: 0 0 0 10px rgba(255, 95, 86, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 95, 86, 0); }
+}
+
+@keyframes landing-mock-bars {
+    0%, 100% { transform: scaleY(0.35); }
+    50%      { transform: scaleY(1); }
+}
+
+// ── Final CTA ───────────────────────────────────────────────────────────────
+.landing-cta {
+    padding: 3.5rem 1.5rem 5rem;
+
+    &__inner {
+        max-width: 720px;
+        margin: 0 auto;
+        background: linear-gradient(135deg, rgba(225, 3, 77, 0.18) 0%, rgba(225, 3, 77, 0.05) 100%);
+        border: 1px solid rgba(225, 3, 77, 0.25);
+        border-radius: 1rem;
+        padding: 2.5rem 1.75rem;
+        text-align: center;
+
+        h2 {
+            font-size: clamp(1.5rem, 2.2vw, 2rem);
+            font-weight: 700;
+            margin: 0 0 0.6rem;
+        }
+
+        p {
+            color: $text-muted;
+            margin: 0 0 1.5rem;
+            font-size: 0.95rem;
+        }
+    }
+}
+
+// ── Responsive ──────────────────────────────────────────────────────────────
+@media (max-width: 900px) {
+    .landing-hero {
+        grid-template-columns: 1fr;
+        padding-top: 3rem;
+
+        &::before {
+            inset: -5% -10% auto auto;
+            width: 320px;
+            height: 320px;
+        }
+    }
+
+    .landing-mock__inner {
+        grid-template-columns: 1fr;
+        padding: 2rem 1.5rem;
+    }
+}

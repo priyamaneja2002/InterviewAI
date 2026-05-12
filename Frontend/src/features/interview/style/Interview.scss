@@ -14,14 +14,19 @@ $severity-high: #ff4d4d;
 $severity-medium: #f5a623;
 $severity-low: #3fb950;
 
-*::-webkit-scrollbar {
-    display: none;
-}
-
 // ── Page Shell ────────────────────────────────────────────────────────────────
 .interview-page {
+    // Hide internal scrollbars inside the interview-only layout for a cleaner look,
+    // while leaving the global page scrollbar visible everywhere else.
+    *::-webkit-scrollbar {
+        display: none;
+    }
+    * {
+        scrollbar-width: none;
+    }
+
     width: 100%;
-    min-height: 100vh;
+    flex: 1;
     background-color: $bg-page;
     color: $text-primary;
     font-family: $font-stack;

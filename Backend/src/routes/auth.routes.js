@@ -21,6 +21,14 @@ authRouter.post('/login', authController.loginUserController);
 
 
 /**
+ * @route POST /api/auth/google
+ * @description Sign in (or sign up) a user with a Google ID token
+ * @access Public
+ */
+authRouter.post('/google', authController.googleAuthController);
+
+
+/**
  * @route GET /api/auth/logout
  * @description Clear token from user cookies and add it to blacklist
  * @access Public

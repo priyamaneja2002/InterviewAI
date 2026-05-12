@@ -4,11 +4,50 @@
     box-sizing: border-box;
 }
 
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 80px;
+}
+
 html, body, #root {
     width: 100%;
     background-color: #161616;
     color: whitesmoke;
     font-family: 'system-ui', sans-serif;
+}
+
+// Themed scrollbar that picks up the accent color.
+html {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(225, 3, 77, 0.55) #161616;
+}
+
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #161616;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: rgba(225, 3, 77, 0.55);
+    border-radius: 8px;
+    border: 2px solid #161616;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+        background-color: #e1034d;
+    }
+
+    &:active {
+        background-color: #c00040;
+    }
+}
+
+::-webkit-scrollbar-corner {
+    background: #161616;
 }
 
 .highlight {

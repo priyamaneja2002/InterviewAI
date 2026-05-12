@@ -21,7 +21,7 @@ async function generateInterviewReportController (req, res) {
     })
 
     const interviewReport = await interviewReportModel.create({
-        user: req.user._id,
+        user: req.user.userId,
         resume: resumeContent.text,
         selfDescription,
         jobDescription,
@@ -36,7 +36,8 @@ async function generateInterviewReportController (req, res) {
 }
 
 /**
- * @description get interview report by interviewId
+ * @description get interview report by interviewId. Only the owner of the
+ *              report can access it.
  * @param {Request} req - The request object
  * @param {Response} res - The response object
  * @returns {Promise<void>}
@@ -44,7 +45,10 @@ async function generateInterviewReportController (req, res) {
 
 async function getInterviewReportByIdController (req, res) {
     const { interviewId } = req.params
-    const interviewReport = await interviewReportModel.findById(interviewId)
+    const interviewReport = await interviewReportModel.findOne({
+        _id: interviewId,
+        user: req.user.userId,
+    })
     if (!interviewReport) {
         return res.status(404).json({
             message: 'Interview report not found'
@@ -64,20 +68,20 @@ async function getInterviewReportByIdController (req, res) {
  */
 
 async function getAllInterviewReportsController (req, res) {
-    const interviewReports = await interviewReportModel.find({ user: req.user._id }).sort({ createdAt: -1 }).select("-resume -selfDescription -jobDescription -technicalQuestions -behavioralQuestions -skillGaps -preparationPlan")
-    if (!interviewReports) {
-        return res.status(404).json({
-            message: 'No interview reports found'
-        })
-    }
+    const interviewReports = await interviewReportModel
+        .find({ user: req.user.userId })
+        .sort({ createdAt: -1 })
+        .select("-resume -selfDescription -jobDescription -technicalQuestions -behavioralQuestions -skillGaps -preparationPlan")
+
     return res.status(200).json({
         message: 'Interview reports fetched successfully',
-        interviewReports
+        interviewReports: interviewReports || []
     })
 }
 
 /**
- * @description generate resume pdf for the interview report
+ * @description generate resume pdf for the interview report. Only the owner of
+ *              the report can download it.
  * @param {Request} req - The request object
  * @param {Response} res - The response object
  * @returns {Promise<void>}
@@ -85,7 +89,10 @@ async function getAllInterviewReportsController (req, res) {
 
 async function generateResumePdfController (req, res) {
     const { interviewReportId } = req.params
-    const interviewReport = await interviewReportModel.findById(interviewReportId)
+    const interviewReport = await interviewReportModel.findOne({
+        _id: interviewReportId,
+        user: req.user.userId,
+    })
     if (!interviewReport) {
         return res.status(404).json({
             message: 'Interview report not found'

@@ -2,32 +2,101 @@ import React, { useState, useRef } from 'react'
 import "../style/Home.scss"
 import { useInterview } from '../hooks/useInterview.js'
 import { useNavigate } from 'react-router'
+import AIThinking from '../../../components/loading/AIThinking'
+
+const JD_CHAR_LIMIT = 5000
+const RESUME_MAX_BYTES = 5 * 1024 * 1024 // 5MB
+
+const formatBytes = (bytes) => {
+    if (!bytes && bytes !== 0) return ''
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
+}
 
 const Home = () => {
 
-    const { loading, generateReport,reports } = useInterview()
-    const [ jobDescription, setJobDescription ] = useState("")
-    const [ selfDescription, setSelfDescription ] = useState("")
+    const { loading, generateReport, reports } = useInterview()
+    const [jobDescription, setJobDescription] = useState("")
+    const [selfDescription, setSelfDescription] = useState("")
+    const [resumeFile, setResumeFile] = useState(null)
+    const [resumeError, setResumeError] = useState(null)
+    const [submitError, setSubmitError] = useState(null)
     const resumeInputRef = useRef()
 
     const navigate = useNavigate()
 
-    const handleGenerateReport = async () => {
-        const resumeFile = resumeInputRef.current.files[ 0 ]
-        const data = await generateReport({ jobDescription, selfDescription, resumeFile })
-        navigate(`/interview/${data._id}`)
+    const handleResumeChange = (e) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        if (file.size > RESUME_MAX_BYTES) {
+            setResumeError('That file is over 5MB. Please upload a smaller PDF or DOCX.')
+            setResumeFile(null)
+            if (resumeInputRef.current) resumeInputRef.current.value = ''
+            return
+        }
+
+        setResumeError(null)
+        setResumeFile(file)
     }
 
-    if (loading) {
-        return (
-            <main className='loading-screen'>
-                <h1>Loading your interview plan...</h1>
-            </main>
-        )
+    const handleResumeClear = (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        setResumeFile(null)
+        setResumeError(null)
+        if (resumeInputRef.current) resumeInputRef.current.value = ''
     }
+
+    const handleJdChange = (e) => {
+        const value = e.target.value
+        setJobDescription(value.length > JD_CHAR_LIMIT ? value.slice(0, JD_CHAR_LIMIT) : value)
+    }
+
+    const canSubmit =
+        jobDescription.trim().length > 0 &&
+        (resumeFile || selfDescription.trim().length > 0)
+
+    const handleGenerateReport = async () => {
+        setSubmitError(null)
+
+        if (!jobDescription.trim()) {
+            setSubmitError('Please paste the job description first.')
+            return
+        }
+        if (!resumeFile && !selfDescription.trim()) {
+            setSubmitError('Add a resume or a short self-description so we can tailor your plan.')
+            return
+        }
+
+        try {
+            const data = await generateReport({ jobDescription, selfDescription, resumeFile })
+            if (data?._id) {
+                navigate(`/interview/${data._id}`)
+            } else {
+                setSubmitError('Something went wrong while generating your plan. Please try again.')
+            }
+        } catch (err) {
+            setSubmitError(err?.response?.data?.message || 'Something went wrong. Please try again.')
+        }
+    }
+
+    const jdLength = jobDescription.length
+    const jdRemaining = JD_CHAR_LIMIT - jdLength
+    const jdCounterClass =
+        jdRemaining < 0 ? 'char-counter char-counter--exceeded' :
+        jdRemaining < 250 ? 'char-counter char-counter--warning' : 'char-counter'
 
     return (
         <div className='home-page'>
+
+            {loading && (
+                <AIThinking
+                    title='Our AI is crafting your plan'
+                    subtitle='Analyzing the role and your profile to build a tailored strategy. This usually takes 20–60 seconds.'
+                />
+            )}
 
             {/* Page Header */}
             <header className='page-header'>
@@ -49,12 +118,15 @@ const Home = () => {
                             <span className='badge badge--required'>Required</span>
                         </div>
                         <textarea
-                            onChange={(e) => { setJobDescription(e.target.value) }}
+                            value={jobDescription}
+                            onChange={handleJdChange}
                             className='panel__textarea'
                             placeholder={`Paste the full job description here...\ne.g. 'Senior Frontend Engineer at Google requires proficiency in React, TypeScript, and large-scale system design...'`}
-                            maxLength={5000}
+                            maxLength={JD_CHAR_LIMIT}
                         />
-                        <div className='char-counter'>0 / 5000 chars</div>
+                        <div className={jdCounterClass}>
+                            {jdLength.toLocaleString()} / {JD_CHAR_LIMIT.toLocaleString()} chars
+                        </div>
                     </div>
 
                     {/* Vertical Divider */}
@@ -75,14 +147,65 @@ const Home = () => {
                                 Upload Resume
                                 <span className='badge badge--best'>Best Results</span>
                             </label>
-                            <label className='dropzone' htmlFor='resume'>
-                                <span className='dropzone__icon'>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 16 12 12 8 16" /><line x1="12" y1="12" x2="12" y2="21" /><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" /></svg>
-                                </span>
-                                <p className='dropzone__title'>Click to upload or drag &amp; drop</p>
-                                <p className='dropzone__subtitle'>PDF or DOCX (Max 5MB)</p>
-                                <input ref={resumeInputRef} hidden type='file' id='resume' name='resume' accept='.pdf,.docx' />
-                            </label>
+
+                            {resumeFile ? (
+                                <div className='resume-uploaded'>
+                                    <span className='resume-uploaded__icon'>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                            <polyline points="14 2 14 8 20 8" />
+                                            <polyline points="9 14 11 16 15 12" />
+                                        </svg>
+                                    </span>
+                                    <div className='resume-uploaded__info'>
+                                        <p className='resume-uploaded__name'>{resumeFile.name}</p>
+                                        <p className='resume-uploaded__meta'>
+                                            <span className='resume-uploaded__status'>Ready to analyze</span>
+                                            <span className='resume-uploaded__sep'>&bull;</span>
+                                            <span>{formatBytes(resumeFile.size)}</span>
+                                        </p>
+                                    </div>
+                                    <div className='resume-uploaded__actions'>
+                                        <label className='resume-uploaded__replace' htmlFor='resume'>Replace</label>
+                                        <button
+                                            type='button'
+                                            className='resume-uploaded__remove'
+                                            onClick={handleResumeClear}
+                                            aria-label='Remove uploaded resume'
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                                        </button>
+                                    </div>
+                                    <input
+                                        ref={resumeInputRef}
+                                        hidden
+                                        type='file'
+                                        id='resume'
+                                        name='resume'
+                                        accept='.pdf,.docx'
+                                        onChange={handleResumeChange}
+                                    />
+                                </div>
+                            ) : (
+                                <label className='dropzone' htmlFor='resume'>
+                                    <span className='dropzone__icon'>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 16 12 12 8 16" /><line x1="12" y1="12" x2="12" y2="21" /><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" /></svg>
+                                    </span>
+                                    <p className='dropzone__title'>Click to upload or drag &amp; drop</p>
+                                    <p className='dropzone__subtitle'>PDF or DOCX (Max 5MB)</p>
+                                    <input
+                                        ref={resumeInputRef}
+                                        hidden
+                                        type='file'
+                                        id='resume'
+                                        name='resume'
+                                        accept='.pdf,.docx'
+                                        onChange={handleResumeChange}
+                                    />
+                                </label>
+                            )}
+
+                            {resumeError && <p className='resume-error'>{resumeError}</p>}
                         </div>
 
                         {/* OR Divider */}
@@ -92,7 +215,8 @@ const Home = () => {
                         <div className='self-description'>
                             <label className='section-label' htmlFor='selfDescription'>Quick Self-Description</label>
                             <textarea
-                                onChange={(e) => { setSelfDescription(e.target.value) }}
+                                value={selfDescription}
+                                onChange={(e) => setSelfDescription(e.target.value)}
                                 id='selfDescription'
                                 name='selfDescription'
                                 className='panel__textarea panel__textarea--short'
@@ -112,12 +236,19 @@ const Home = () => {
 
                 {/* Card Footer */}
                 <div className='interview-card__footer'>
-                    <span className='footer-info'>AI-Powered Strategy Generation &bull; Approx 30s</span>
+                    <span className='footer-info'>
+                        {submitError ? (
+                            <span className='footer-info__error'>{submitError}</span>
+                        ) : (
+                            'AI-Powered Strategy Generation • Approx 30s'
+                        )}
+                    </span>
                     <button
                         onClick={handleGenerateReport}
+                        disabled={!canSubmit || loading}
                         className='generate-btn'>
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" /></svg>
-                        Generate My Interview Strategy
+                        {loading ? 'Generating...' : 'Generate My Interview Strategy'}
                     </button>
                 </div>
             </div>
@@ -138,12 +269,6 @@ const Home = () => {
                 </section>
             )}
 
-            {/* Page Footer */}
-            <footer className='page-footer'>
-                <a href='#'>Privacy Policy</a>
-                <a href='#'>Terms of Service</a>
-                <a href='#'>Help Center</a>
-            </footer>
         </div>
     )
 }

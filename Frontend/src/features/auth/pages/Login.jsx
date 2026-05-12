@@ -1,8 +1,8 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import '../auth.form.scss'
 import { useAuth } from '../hooks/useAuth';
-import { useState } from 'react';
+import GoogleAuthButton from '../components/GoogleAuthButton';
 
 function Login() {
     const navigate = useNavigate();
@@ -10,45 +10,70 @@ function Login() {
     const { loading, handleLogin } = useAuth();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [submitting, setSubmitting] = useState(false);
+    const [error, setError] = useState(null);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        await handleLogin({email, password});
-        console.log('Form submitted');
-        navigate('/');
+        setError(null);
+        setSubmitting(true);
+        try {
+            const data = await handleLogin({ email, password });
+            if (!data?.user) {
+                setError('Invalid email or password.');
+                return;
+            }
+            navigate('/');
+        } catch (err) {
+            setError(err?.response?.data?.message || 'Login failed.');
+        } finally {
+            setSubmitting(false);
+        }
     }
 
-    if(loading) {
-        return (<main>
-            <h1>Loading........</h1>
-        </main>)
-    }
+    return (
+        <main className='login-page'>
+            <div className='form-container'>
+                <h1>Welcome back</h1>
+                <p className='form-subtitle'>Sign in to access your interview plans.</p>
 
-  return (
-    <main className='login-page'>
-        <div className='form-container'>
-            <h1>Login</h1>
-            <form onSubmit={handleSubmit}>
-                <div type="text" className="input-group">
-                    <label htmlFor="email">Email</label>
-                    <input 
-                        onChange={(e) => {setEmail(e.target.value)}}
-                        type="email" id="email" placeholder='Enter your email' />
-                    
-                </div>
-                <div type="text" className="input-group">
-                    <label htmlFor="password">Password</label>
-                    <input 
-                        onChange={(e) => {setPassword(e.target.value)}}
-                        type="password" id="password" placeholder='Enter your password' />
+                {error && <div className='form-error' role='alert'>{error}</div>}
 
-                </div>
-                <button className='btn btn-primary' type='submit'>Login</button>
-            </form>
-            <p>Don't have an account? <Link to='/register'>Register</Link></p>
-        </div>
-    </main>
-  )
+                <form onSubmit={handleSubmit}>
+                    <div className="input-group">
+                        <label htmlFor="email">Email</label>
+                        <input
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            type="email" id="email" placeholder='Enter your email' required />
+                    </div>
+                    <div className="input-group">
+                        <label htmlFor="password">Password</label>
+                        <input
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            type="password" id="password" placeholder='Enter your password' required />
+                    </div>
+                    <button
+                        className='btn btn-primary'
+                        type='submit'
+                        disabled={submitting || loading}
+                    >
+                        {submitting ? 'Signing in...' : 'Login'}
+                    </button>
+                </form>
+
+                <div className='form-divider'><span>or</span></div>
+
+                <GoogleAuthButton
+                    text='signin_with'
+                    onSuccess={() => navigate('/')}
+                />
+
+                <p>Don't have an account? <Link to='/register'>Register</Link></p>
+            </div>
+        </main>
+    )
 }
 
 export default Login

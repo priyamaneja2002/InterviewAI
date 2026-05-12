@@ -2,7 +2,8 @@ import React, { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { useAuth } from '../../auth/hooks/useAuth'
 import { useInterview } from '../../interview/hooks/useInterview'
-import { getDisplayName, getFullName, getInitial } from '../../auth/utils/user'
+import { getDisplayName, getFullName } from '../../auth/utils/user'
+import UserAvatar from '../../auth/components/UserAvatar'
 import AIThinking from '../../../components/loading/AIThinking'
 import '../style/profile.scss'
 
@@ -105,11 +106,10 @@ const Profile = () => {
                 <div className='profile-hero__bg' aria-hidden='true' />
                 <div className='profile-hero__inner'>
                     <div className='profile-hero__avatar'>
-                        {user.avatar ? (
-                            <img src={user.avatar} alt={fullName || displayName} />
-                        ) : (
-                            <span className='profile-hero__avatar-fallback'>{getInitial(user)}</span>
-                        )}
+                        <UserAvatar
+                            user={user}
+                            fallbackClass='profile-hero__avatar-fallback'
+                        />
                     </div>
                     <div className='profile-hero__info'>
                         <span className='profile-hero__greeting'>Welcome back,</span>

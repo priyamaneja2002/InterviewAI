@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router'
 import { useAuth } from '../../features/auth/hooks/useAuth'
-import { getDisplayName, getInitial } from '../../features/auth/utils/user'
+import { getDisplayName } from '../../features/auth/utils/user'
+import UserAvatar from '../../features/auth/components/UserAvatar'
 import ComingSoonModal from '../feedback/ComingSoonModal'
 import './layout.scss'
 
@@ -132,13 +133,10 @@ const Header = () => {
                                     aria-expanded={userMenuOpen}
                                     aria-label='Open account menu'
                                 >
-                                    {user.avatar ? (
-                                        <img src={user.avatar} alt={getDisplayName(user)} />
-                                    ) : (
-                                        <span className='site-header__avatar-fallback'>
-                                            {getInitial(user)}
-                                        </span>
-                                    )}
+                                    <UserAvatar
+                                        user={user}
+                                        fallbackClass='site-header__avatar-fallback'
+                                    />
                                     <span className='site-header__user-name'>{getDisplayName(user)}</span>
                                     <span
                                         className={`site-header__user-caret ${userMenuOpen ? 'is-open' : ''}`}

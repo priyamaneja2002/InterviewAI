@@ -3,6 +3,7 @@ import "../style/Home.scss"
 import { useInterview } from '../hooks/useInterview.js'
 import { useNavigate } from 'react-router'
 import AIThinking from '../../../components/loading/AIThinking'
+import { EXPERIENCE_OPTIONS, getDummyJdForSelection, ROLE_OPTIONS } from '../jdTemplates'
 
 const JD_CHAR_LIMIT = 5000
 const RESUME_MAX_BYTES = 5 * 1024 * 1024 // 5MB
@@ -18,6 +19,8 @@ const Home = () => {
 
     const { loading, generateReport, reports } = useInterview()
     const [jobDescription, setJobDescription] = useState("")
+    const [selectedRole, setSelectedRole] = useState("")
+    const [selectedExperience, setSelectedExperience] = useState("")
     const [selfDescription, setSelfDescription] = useState("")
     const [resumeFile, setResumeFile] = useState(null)
     const [resumeError, setResumeError] = useState(null)
@@ -54,6 +57,24 @@ const Home = () => {
         setJobDescription(value.length > JD_CHAR_LIMIT ? value.slice(0, JD_CHAR_LIMIT) : value)
     }
 
+    const handleRoleChange = (e) => {
+        const role = e.target.value
+        setSelectedRole(role)
+        if (!role || !selectedExperience) return
+
+        const generatedJd = getDummyJdForSelection(role, selectedExperience)
+        setJobDescription(generatedJd.length > JD_CHAR_LIMIT ? generatedJd.slice(0, JD_CHAR_LIMIT) : generatedJd)
+    }
+
+    const handleExperienceChange = (e) => {
+        const experience = e.target.value
+        setSelectedExperience(experience)
+        if (!selectedRole || !experience) return
+
+        const generatedJd = getDummyJdForSelection(selectedRole, experience)
+        setJobDescription(generatedJd.length > JD_CHAR_LIMIT ? generatedJd.slice(0, JD_CHAR_LIMIT) : generatedJd)
+    }
+
     const canSubmit =
         jobDescription.trim().length > 0 &&
         (resumeFile || selfDescription.trim().length > 0)
@@ -87,6 +108,9 @@ const Home = () => {
     const jdCounterClass =
         jdRemaining < 0 ? 'char-counter char-counter--exceeded' :
         jdRemaining < 250 ? 'char-counter char-counter--warning' : 'char-counter'
+    const recentReports = [ ...reports ]
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, 3)
 
     return (
         <div className='home-page'>
@@ -124,6 +148,34 @@ const Home = () => {
                             placeholder={`Paste the full job description here...\ne.g. 'Senior Frontend Engineer at Google requires proficiency in React, TypeScript, and large-scale system design...'`}
                             maxLength={JD_CHAR_LIMIT}
                         />
+                        <div className='jd-generator'>
+                            <p className='jd-generator__label'>Or pick a prebuilt dummy JD template</p>
+                            <div className='jd-generator__controls'>
+                                <select
+                                    className='jd-generator__select'
+                                    value={selectedRole}
+                                    onChange={handleRoleChange}
+                                    aria-label='Select preferred role'
+                                >
+                                    <option value=''>Select role</option>
+                                    {ROLE_OPTIONS.map((role) => (
+                                        <option key={role} value={role}>{role}</option>
+                                    ))}
+                                </select>
+                                <select
+                                    className='jd-generator__select'
+                                    value={selectedExperience}
+                                    onChange={handleExperienceChange}
+                                    aria-label='Select experience level'
+                                >
+                                    <option value=''>Select experience</option>
+                                    {EXPERIENCE_OPTIONS.map((experience) => (
+                                        <option key={experience.value} value={experience.value}>{experience.label}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <p className='jd-generator__hint'>Choosing both fields auto-generates a dummy JD in the textbox above.</p>
+                        </div>
                         <div className={jdCounterClass}>
                             {jdLength.toLocaleString()} / {JD_CHAR_LIMIT.toLocaleString()} chars
                         </div>
@@ -256,9 +308,18 @@ const Home = () => {
             {/* Recent Reports List */}
             {reports.length > 0 && (
                 <section className='recent-reports'>
-                    <h2>My Recent Interview Plans</h2>
+                    <div className='recent-reports__header'>
+                        <h2>My Recent Interview Plans</h2>
+                        <button
+                            type='button'
+                            className='recent-reports__view-all'
+                            onClick={() => navigate('/profile')}
+                        >
+                            View Full History
+                        </button>
+                    </div>
                     <ul className='reports-list'>
-                        {reports.map(report => (
+                        {recentReports.map(report => (
                             <li key={report._id} className='report-item' onClick={() => navigate(`/interview/${report._id}`)}>
                                 <h3>{report.title || 'Untitled Position'}</h3>
                                 <p className='report-meta'>Generated on {new Date(report.createdAt).toLocaleDateString()}</p>

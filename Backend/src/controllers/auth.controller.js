@@ -5,18 +5,23 @@ const tokenBlacklistModel = require('../models/blacklist.model');
 const { OAuth2Client } = require('google-auth-library');
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const isProduction = process.env.NODE_ENV === 'production';
+
+function getAuthCookieOptions() {
+    return {
+        httpOnly: true,
+        sameSite: isProduction ? 'none' : 'lax',
+        secure: isProduction,
+        maxAge: 24 * 60 * 60 * 1000,
+    };
+}
 
 function signAuthToken(userId) {
     return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '1d' });
 }
 
 function setAuthCookie(res, token) {
-    res.cookie('token', token, {
-        httpOnly: true,
-        sameSite: 'lax',
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: 24 * 60 * 60 * 1000,
-    });
+    res.cookie('token', token, getAuthCookieOptions());
 }
 /**
  * @name registerUserController
@@ -230,11 +235,8 @@ async function logoutUserController(req, res) {
     if (token) {
         await tokenBlacklistModel.create({ token });
     }
-    res.clearCookie('token', {
-        httpOnly: true,
-        sameSite: 'lax',
-        secure: process.env.NODE_ENV === 'production',
-    });
+    const { maxAge, ...clearCookieOptions } = getAuthCookieOptions();
+    res.clearCookie('token', clearCookieOptions);
     res.status(200).json({ message: 'User logged out successfully' });
 }
 
